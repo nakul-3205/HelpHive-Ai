@@ -1,55 +1,55 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import cors from 'cors';
+import express from 'express'
+import mongoose from 'mongoose'
+import dotenv from 'dotenv'
+import cors from 'cors'
 
-// Routes
-import userRoutes from './routes/user.js';
-import ticketRoutes from './routes/ticket.js';
+import userRoutes from './routes/user.js'
+import ticketRoutes from './routes/ticket.js'
 
-// Middlewares
-import { authenticate } from './middlewares/auth.js'; // ✅ use your auth middleware here
+import { authenticate } from './middlewares/auth.js'
 
-// Inngest stuff 
-import { inngest } from './inngest/client.js';
-import { onSignup } from './inngest/functions/on-signup.js';
-import { onTicketCreated } from './inngest/functions/on-ticket-create.js';
-import { serve } from 'inngest/astro';
+import { inngest } from './inngest/client.js'
+import { onSignup } from './inngest/functions/on-signup.js'
+import { onTicketCreated } from './inngest/functions/on-ticket-create.js'
+import { serve } from 'inngest/astro'
 
-dotenv.config();
-const app = express();
+dotenv.config()
+const app = express()
 
-// 🔧 Basic setup
-app.use(cors());
-app.use(express.json());
-
-// ✅ Public routes (no auth needed)
-app.use('/api/auth', userRoutes);
-
-// 🔐 Protect all routes below this
-app.use(authenticate);
-
-// ✅ Protected routes
-app.use('/api/tickets', ticketRoutes);
-
-// Optional (protected) inngest routes
-app.use('/api/inngest', serve({
-  client: inngest,
-  functions: [onSignup, onTicketCreated],
-}));
-
-// 🚀 Server + DB setup
-const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI;
-
-mongoose
-  .connect(MONGO_URI)
-  .then(() => {
-    console.log('✅ Connected to MongoDB');
-    app.listen(PORT, () => {
-      console.log(`🚀 Server is running on http://localhost:${PORT}`);
-    });
+app.use(
+  cors({
+    origin: [
+      'http://localhost:5173',
+      'https://helphive-ai-frontend.onrender.com'
+    ],
+    credentials: true
   })
-  .catch((err) => {
-    console.error('❌ Error connecting to MongoDB:', err);
-  });
+)
+app.use(express.json())
+
+app.use('/api/auth', userRoutes)
+
+app.use(
+  '/api/inngest',
+  serve({
+    client: inngest,
+    functions: [onSignup, onTicketCreated]
+  })
+)
+
+app.use(authenticate)
+
+app.use('/api/tickets', ticketRoutes)
+
+const PORT = process.env.PORT || 3000
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log('Connected to MongoDB')
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`)
+    })
+  })
+  .catch(err => {
+    console.error('Mongo connection error:', err)
+  })
