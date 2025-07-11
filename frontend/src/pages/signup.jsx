@@ -18,7 +18,7 @@ export default function SignupPage() {
     setError(null); // Clear previous errors
     try {
       const res = await fetch(
-        `${import.meta.env.VITE_SERVER_URL}/auth/signup`,
+        `${import.meta.env.VITE_SERVER_URL}/api/auth/signup`,
         {
           method: "POST",
           headers: {
